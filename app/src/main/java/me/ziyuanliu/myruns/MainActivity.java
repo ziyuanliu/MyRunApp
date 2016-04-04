@@ -7,12 +7,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -21,7 +19,6 @@ import android.support.v4.app.ActivityCompat;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import java.io.File;
@@ -32,6 +29,7 @@ public class MainActivity extends Activity {
 
     // sharedpref keys
     public static final String PREF_KEYS_LAST_IMG = "PREF_KEYS_LAST_IMG";
+    public static final String PREF_KEYS_IS_FROM_CAMERA = "PREF_KEYS_IS_FROM_CAMERA";
     public static final String PREF_KEYS_USER_DETAIL = "PREF_KEYS_USER_DETAIL";
     public static final String PREF_KEYS_PROF_IMG = "PREF_KEYS_PROF_IMG";
     public static final String PREF_KEYS_USER_NAME = "PREF_KEYS_USER_NAME";
@@ -74,7 +72,7 @@ public class MainActivity extends Activity {
 
     /**
      * Checks if the app has permission to write to device storage
-     *
+     * help from stackoverflow to deal with API 23
      * If the app does not has permission then the user will be prompted to grant permissions
      *
      * @param activity
@@ -122,6 +120,8 @@ public class MainActivity extends Activity {
         maleRB.setChecked(pref.getBoolean(PREF_KEYS_USER_IS_MALE, false));
         femaleRB.setChecked(!pref.getBoolean(PREF_KEYS_USER_IS_MALE, true));
 
+        // better be safe than sorry
+        isFromCamera = pref.getBoolean(PREF_KEYS_IS_FROM_CAMERA, false);
         loadSnap();
     }
 
@@ -171,13 +171,6 @@ public class MainActivity extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-                // Delete temporary image taken by camera after crop.
-//                if (isFromCamera) {
-//                    File f = new File(imageUri.getPath());
-//                    if (f.exists())
-//                        f.delete();
-//                }
 
                 break;
 
@@ -257,6 +250,10 @@ public class MainActivity extends Activity {
             default:
                 break;
         }
+
+        Editor editor = pref.edit();
+        editor.putBoolean(PREF_KEYS_IS_FROM_CAMERA, isFromCamera);
+        editor.commit();
     }
 
     private void goHome(){
@@ -275,6 +272,8 @@ public class MainActivity extends Activity {
         editor.putString(PREF_KEYS_USER_GRAD_CLASS, gradClassET.getText().toString());
         editor.putString(PREF_KEYS_USER_MAJOR, majorET.getText().toString());
         editor.putBoolean(PREF_KEYS_USER_IS_MALE, femaleRB.isChecked() == false);
+        editor.remove(PREF_KEYS_LAST_IMG);
+        editor.remove(PREF_KEYS_IS_FROM_CAMERA);
         editor.commit();
 
         Toast.makeText(this, R.string.profile_saved_text, Toast.LENGTH_LONG).show();
@@ -285,8 +284,17 @@ public class MainActivity extends Activity {
     public void cancelChanges(View view){
         Editor editor = pref.edit();
         editor.remove(PREF_KEYS_LAST_IMG);
-        editor.commit();
+        editor.remove(PREF_KEYS_IS_FROM_CAMERA);
 
+        // Delete temporary image taken by camera after crop.
+        // don't delete shit from gallery
+        if (isFromCamera) {
+            File f = new File(imageUri.getPath());
+            if (f.exists())
+                f.delete();
+        }
+
+        editor.commit();
         goHome();
     }
 }
