@@ -7,10 +7,6 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 public class PhotoSourceDialog extends DialogFragment {
     // Dialog ID return statuses
@@ -42,7 +38,7 @@ public class PhotoSourceDialog extends DialogFragment {
                 builder.setTitle(R.string.ui_profile_photo_picker_title);
                 DialogInterface.OnClickListener dlistener = new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
-                        ((MainActivity) parent).onPhotoSourceDialogSelected(item);
+                        ((SettingsActivity) parent).onPhotoSourceDialogSelected(item);
                     }
                 };
                 // Set the item/s to display and create the dialog

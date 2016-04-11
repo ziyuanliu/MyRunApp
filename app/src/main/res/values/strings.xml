@@ -1,4 +1,33 @@
 <resources>
+    <string-array name="system_unit_type">
+        <item>"Metric (Kilometers)"</item>
+        <item>"Imperial (Miles)"</item>
+    </string-array>
+    <string-array name="input_type_array">
+        <item>Manual Entry</item>
+        <item>GPS</item>
+        <item>Automatic</item>
+    </string-array>
+
+    <string-array name="activity_type_array">
+        <item>Running</item>
+        <item>Walking</item>
+        <item>Standing</item>
+        <item>Cycling</item>
+        <item>Hiking</item>
+        <item>Downhill Skiing</item>
+        <item>Cross-Country Skiing</item>
+        <item>Snowboarding</item>
+        <item>Skating</item>
+        <item>Swimming</item>
+        <item>Mountain Biking</item>
+        <item>Wheelchar</item>
+        <item>Elliptical</item>
+        <item>Other</item>
+    </string-array>
+
+    <string name="alert_dialog_unit_preferred">Units preferred</string>
+    <string name="alert_dialog_comment">Comment</string>
     <string name="app_name">MyRuns</string>
     <string name="user_profile_photo">Profile Photo:</string>
     <string name="button_profile_photo_change">Retake</string>
