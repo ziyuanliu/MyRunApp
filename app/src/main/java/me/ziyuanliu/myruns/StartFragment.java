@@ -2,6 +2,7 @@ package me.ziyuanliu.myruns;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,11 +12,12 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import static android.widget.ArrayAdapter.*;
 
 public class StartFragment extends Fragment {
-	
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // XD: If set to true then when your layout is inflated it will be automatically added to the view hierarchy
@@ -39,6 +41,7 @@ public class StartFragment extends Fragment {
         inputTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                ((TextView) parent.getChildAt(0)).setTextSize(15);
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, position);
                 editor.commit();
@@ -64,6 +67,7 @@ public class StartFragment extends Fragment {
         activityTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                ((TextView) parent.getChildAt(0)).setTextSize(15);
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putInt(SettingsActivity.PREF_KEYS_USER_ACTIVITY_TYPE, position);
                 editor.commit();

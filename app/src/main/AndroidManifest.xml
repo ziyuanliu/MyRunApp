@@ -19,6 +19,9 @@
         <activity android:name="me.ziyuanliu.myruns.SettingsActivity">
 
         </activity>
+        <activity android:name="me.ziyuanliu.myruns.StartExerciseActivity">
+
+        </activity>
     </application>
 
 </manifest>

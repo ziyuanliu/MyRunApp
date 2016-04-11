@@ -1,4 +1,13 @@
 <resources>
+    <string-array name="exercise_details">
+        <item>Date</item>
+        <item>Time</item>
+        <item>Duration</item>
+        <item>Distance</item>
+        <item>Calories</item>
+        <item>Heart Rate</item>
+        <item>Comment</item>
+    </string-array>
     <string-array name="system_unit_type">
         <item>"Metric (Kilometers)"</item>
         <item>"Imperial (Miles)"</item>
@@ -28,6 +37,10 @@
 
     <string name="alert_dialog_unit_preferred">Units preferred</string>
     <string name="alert_dialog_comment">Comment</string>
+    <string name="alert_dialog_duration">Duration</string>
+    <string name="alert_dialog_distance">Distance</string>
+    <string name="alert_dialog_calories">Calories</string>
+    <string name="alert_dialog_heart_rate">Heart Rate</string>
     <string name="app_name">MyRuns</string>
     <string name="user_profile_photo">Profile Photo:</string>
     <string name="button_profile_photo_change">Retake</string>

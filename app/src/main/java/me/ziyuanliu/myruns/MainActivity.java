@@ -2,6 +2,7 @@ package me.ziyuanliu.myruns;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -62,11 +63,11 @@ public class MainActivity extends Activity{
         slidingTabLayout.setDistributeEvenly(true);
         slidingTabLayout.setViewPager(viewPager);
 
-        setUpSettingsListView();
     }
 
-    public void setUpSettingsListView(){
-
+    public void startBtnClicked(View view){
+        Intent intent = new Intent(this, StartExerciseActivity.class);
+        startActivity(intent);
     }
 
 }

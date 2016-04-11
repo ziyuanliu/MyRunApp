@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -132,7 +133,8 @@ public class SettingsFragment extends Fragment {
 
                         break;
                     case 5:
-                        newFragment = CommentDialogFragment.newInstance(R.string.alert_dialog_comment, self);
+                        newFragment = CommentDialogFragment.newInstance(R.string.alert_dialog_comment, "Write your comment here",
+                                InputType.TYPE_CLASS_TEXT);
                         newFragment.show(getFragmentManager(), "dialog");
                         break;
                     case 7:
