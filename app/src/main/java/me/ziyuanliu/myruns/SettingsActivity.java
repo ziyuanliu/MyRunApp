@@ -7,10 +7,14 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -22,16 +26,17 @@ import android.widget.RadioButton;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class SettingsActivity extends Activity {
     public static final String TAG = "SettingsActivity";
 
     // sharedpref keys
-    public static final String PREF_KEYS_LAST_IMG = "PREF_KEYS_LAST_IMG";
+    public static final String PREF_KEYS_PF_URI = "PREF_KEYS_PF_URI";
     public static final String PREF_KEYS_IS_FROM_CAMERA = "PREF_KEYS_IS_FROM_CAMERA";
     public static final String PREF_KEYS_USER_DETAIL = "PREF_KEYS_USER_DETAIL";
-    public static final String PREF_KEYS_PROF_IMG = "PREF_KEYS_PROF_IMG";
     public static final String PREF_KEYS_USER_NAME = "PREF_KEYS_USER_NAME";
     public static final String PREF_KEYS_USER_EMAIL = "PREF_KEYS_USER_EMAIL";
     public static final String PREF_KEYS_USER_PHONE = "PREF_KEYS_USER_PHONE";
@@ -119,10 +124,6 @@ public class SettingsActivity extends Activity {
 
         maleRB.setChecked(pref.getBoolean(PREF_KEYS_USER_IS_MALE, false));
         femaleRB.setChecked(!pref.getBoolean(PREF_KEYS_USER_IS_MALE, true));
-
-        // better be safe than sorry
-        isFromCamera = pref.getBoolean(PREF_KEYS_IS_FROM_CAMERA, false);
-        loadSnap();
     }
 
     @Override
@@ -132,25 +133,36 @@ public class SettingsActivity extends Activity {
         this.verifyStoragePermissions(this);
 
         if (savedInstanceState!=null){
-            String lastImgStr = savedInstanceState.getString(PREF_KEYS_LAST_IMG, null);
-            if (lastImgStr != null){
-                imageUri = Uri.parse(lastImgStr);
-            }
-
+            imageUri = savedInstanceState.getParcelable(PREF_KEYS_PF_URI);
             isFromCamera = savedInstanceState.getBoolean(PREF_KEYS_IS_FROM_CAMERA, false);
         }
 
         initializeVars();
         fillInFields();
-
+        loadSnap();
     }
 
+    /*
+    * inspiration from the lab 1 solution on logic
+    * In here we do not use a third party cropper like soundcloud, so the development will overwrite
+    * the original image when cropping*/
     private void loadSnap(){
-        if (imageUri!=null){
-            imageView.setImageURI(imageUri);
-        }else {
+        try{
+            if (imageUri!=null && !Uri.EMPTY.equals(imageUri)) {
+                imageView.setImageURI(imageUri);
+            }else{
+                FileInputStream f = openFileInput(getString(R.string.button_profile_photo_filename));
+                Log.d("wtf", String.valueOf(f.getChannel().size()));
+                Bitmap bmap = BitmapFactory.decodeStream(f);
+                imageView.setImageBitmap(bmap);
+                f.close();
+            }
+
+        }catch (IOException e) {
+            // Default profile photo if no photo saved before.
             imageView.setImageResource(R.drawable.questions);
         }
+
     }
 
 
@@ -159,6 +171,7 @@ public class SettingsActivity extends Activity {
         fragment.show(getFragmentManager(),
                 getString(R.string.dialog_fragment_tag_photo_picker));
     }
+
 
     // handle return from other activity
     @Override
@@ -200,9 +213,6 @@ public class SettingsActivity extends Activity {
                 break;
 
         }
-
-        Editor editor = pref.edit();
-        editor.commit();
     }
 
     private void sendToCrop() {
@@ -257,25 +267,32 @@ public class SettingsActivity extends Activity {
             default:
                 break;
         }
-
-        Editor editor = pref.edit();
-        editor.putBoolean(PREF_KEYS_IS_FROM_CAMERA, isFromCamera);
-        editor.commit();
     }
 
-    private void goHome(){
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_HOME);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+    /*
+    * This saves the profile image from the image view*/
+    public void saveProfileImage(){
+        imageView.buildDrawingCache();
+        Bitmap bmap = imageView.getDrawingCache();
+        try {
+            FileOutputStream fos = openFileOutput(
+                    getString(R.string.button_profile_photo_filename), MODE_PRIVATE);
+            bmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+
+            fos.flush();
+            fos.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
     }
 
+    /*
+    Let's save the profile now
+     */
     public void saveProfile(View view){
         Editor editor = pref.edit();
-        if (imageUri!=null){
-            editor.putString(PREF_KEYS_PROF_IMG, imageUri.toString());
-        }
-
+        saveProfileImage();
+        deleteImage(imageUri);
         editor.putString(PREF_KEYS_USER_NAME, nameET.getText().toString());
         editor.putString(PREF_KEYS_USER_EMAIL, emailET.getText().toString());
         editor.putString(PREF_KEYS_USER_PHONE, phoneET.getText().toString());
@@ -287,32 +304,27 @@ public class SettingsActivity extends Activity {
         editor.commit();
         Toast.makeText(this, R.string.profile_saved_text, Toast.LENGTH_LONG).show();
 
-        goHome();
+        finish();
     }
 
-    public void cancelChanges(View view){
-        Editor editor = pref.edit();
-
-        // Delete temporary image taken by camera after crop.
-        if (isFromCamera) {
+    public void deleteImage(Uri imageUri){
+        if (isFromCamera){
+            // don't tamper with gallery stuff
             File f = new File(imageUri.getPath());
-            if (f.exists())
+            if (f.exists()){
                 f.delete();
+            }
         }
-
-        editor.commit();
-        goHome();
+    }
+    public void cancelChanges(View view){
+        deleteImage(imageUri);
+        finish();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (imageUri!=null) {
-            outState.putString(PREF_KEYS_LAST_IMG, imageUri.toString());
-        }
-
-        if (isFromCamera){
-            outState.putBoolean(PREF_KEYS_IS_FROM_CAMERA, isFromCamera);
-        }
+        outState.putParcelable(PREF_KEYS_PF_URI, imageUri);
+        outState.putBoolean(PREF_KEYS_IS_FROM_CAMERA, isFromCamera);
     }
 }

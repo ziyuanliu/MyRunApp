@@ -44,6 +44,7 @@
     <string name="app_name">MyRuns</string>
     <string name="user_profile_photo">Profile Photo:</string>
     <string name="button_profile_photo_change">Retake</string>
+    <string name="button_profile_photo_filename">profile_photo.png</string>
     <string name="user_name">User</string>
     <string name="user_name_ph">Your Name</string>
     <string name="user_email">Email</string>

@@ -41,7 +41,6 @@ public class StartFragment extends Fragment {
         inputTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                ((TextView) parent.getChildAt(0)).setTextSize(15);
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, position);
                 editor.commit();
@@ -54,6 +53,7 @@ public class StartFragment extends Fragment {
         });
 
         Spinner activityTypeSpinner = (Spinner)view.findViewById(R.id.activity_type);
+
         ArrayAdapter<CharSequence> activityTypeAdapter = ArrayAdapter.createFromResource(getActivity(),
             R.array.activity_type_array, android.R.layout.simple_spinner_item);
 
@@ -67,7 +67,6 @@ public class StartFragment extends Fragment {
         activityTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                ((TextView) parent.getChildAt(0)).setTextSize(15);
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putInt(SettingsActivity.PREF_KEYS_USER_ACTIVITY_TYPE, position);
                 editor.commit();
@@ -78,6 +77,7 @@ public class StartFragment extends Fragment {
 
             }
         });
+
 
         return view;
 

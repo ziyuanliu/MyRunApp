@@ -1,21 +1,12 @@
 package me.ziyuanliu.myruns;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -35,7 +26,7 @@ public class MainActivity extends Activity{
     private ActionTabsViewPagerAdapter actionTabsViewPagerAdapter;
 
 
-    /** Called when the activity is first created. */
+    /** Called when the activity is first created. Inspiration from actionbar file*/
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +46,6 @@ public class MainActivity extends Activity{
 
         // use FragmentPagerAdapter to bind the slidingTabLayout (tabs with different titles)
         // and ViewPager (different pages of fragment) together.
-
         actionTabsViewPagerAdapter = new ActionTabsViewPagerAdapter(this.getFragmentManager(), fragments);
         viewPager.setAdapter(actionTabsViewPagerAdapter);
 
@@ -65,8 +55,14 @@ public class MainActivity extends Activity{
 
     }
 
+    /*
+    * Deal with start button being clicked, here we decide on whether it's going to be a map or manual activity
+    * */
     public void startBtnClicked(View view){
-        Intent intent = new Intent(this, StartExerciseActivity.class);
+        SharedPreferences pref = getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, MODE_PRIVATE);
+        boolean isMapActivity = pref.getInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, 0) > 0;
+
+        Intent intent = new Intent(this, isMapActivity ? GPSExerciseActivity.class : ManualExerciseActivity.class);
         startActivity(intent);
     }
 

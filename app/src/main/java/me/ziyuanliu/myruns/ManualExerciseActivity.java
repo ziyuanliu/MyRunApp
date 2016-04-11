@@ -16,25 +16,28 @@ import java.util.List;
 /**
  * Created by ziyuanliu on 4/11/16.
  */
-public class StartExerciseActivity extends Activity {
+public class ManualExerciseActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_exercise);
-        String[] myResArray = getResources().getStringArray(R.array.exercise_details);
-        List<String> myResArrayList = Arrays.asList(myResArray);
 
+        // create a string array from resources
+        String[] exercise_detail_fields = getResources().getStringArray(R.array.exercise_details);
+        List<String> myResArrayList = Arrays.asList(exercise_detail_fields);
+
+        // use that string array as the base for the listview adapter
         ListView exercise_details = (ListView)findViewById(R.id.exercise_detail_list);
         ArrayAdapter<String> exercise_det_list = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, myResArrayList);
         exercise_details.setAdapter(exercise_det_list);
 
+        // handle each item click
         exercise_details.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 DialogFragment frag;
-
                 switch (position){
                     case 0:
                         frag = new DateDialogPicker();

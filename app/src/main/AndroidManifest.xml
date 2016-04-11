@@ -9,17 +9,24 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:label="My Runs">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="me.ziyuanliu.myruns.SettingsActivity">
+        <activity android:name="me.ziyuanliu.myruns.SettingsActivity"
+            android:label="Settings">
 
         </activity>
-        <activity android:name="me.ziyuanliu.myruns.StartExerciseActivity">
+        <activity android:name=".ManualExerciseActivity"
+            android:label="Manual Entry">
+
+        </activity>
+        <activity android:name=".GPSExerciseActivity"
+            android:label="Map">
 
         </activity>
     </application>

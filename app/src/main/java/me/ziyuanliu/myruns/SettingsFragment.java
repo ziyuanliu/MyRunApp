@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +20,8 @@ import android.widget.TextView;
 
 public class SettingsFragment extends Fragment {
 
+    // just a rudimentary way of using containing the menu,
+    // I use a hashtag # to delimit TITLE, SUBTITLE, CHECKBOX
     private static final String[] SETTINGS_ROWS = new String[]{
             "section#Account Preferences",
             "Name, Email, Class etc#User Profile",
@@ -32,28 +33,39 @@ public class SettingsFragment extends Fragment {
             "Webpage#http://web.cs.dartmouth.edu/",
     };
 
+
+    /*
+    Todo: implement
+     */
     public void doPositiveClick(String fragType) {
     }
 
+    /*
+    TODO: implement
+     */
     public void doNegativeClick(String fragType) {
     }
 
+    /*
+    I've moved the logic out of the main activity view to avoid a monolith
+    this function will handle all the child-logics.
+     */
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // XD: If set to true then when your layout is inflated it will be automatically added to the view hierarchy
-        // of the ViewGroup specified in the 2nd parameter as a child.
-        //XD:if set to false, they are not added as direct children of the parent and
-        // the parent doesn't recieve any touch events from the views.
 
+        // inflate the view with layout
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
         ListView settingsListView = (ListView)view.findViewById(R.id.settings_list_view);
+
+        // const ref to the sharedpreferences
         final SharedPreferences pref = getActivity().getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, SettingsActivity.MODE_PRIVATE);
 
+        // list view adapter, we override the getview immediately to make the check boxes and the second
+        // subtitle happen
         ArrayAdapter<String> listViewAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_view_row, SETTINGS_ROWS){
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
-//                Log.d("LIST", String.valueOf(position));
                 String setting_row_str = SETTINGS_ROWS[position];
                 String[] splitted_str = setting_row_str.split("#");
 
@@ -64,11 +76,16 @@ public class SettingsFragment extends Fragment {
                     row=inflater.inflate(R.layout.list_view_row, null);
                 }
 
-
+                // set the item row
                 TextView title = (TextView)row.findViewById(R.id.text_view_title);
                 TextView subtitle = (TextView)row.findViewById(R.id.text_view_subtitle);
                 CheckBox btn = (CheckBox) row.findViewById(R.id.text_view_checkbox);
                 btn.setEnabled(false);
+
+                // we make sure that the checkbox is not enabled and that all touches will propagate from
+                // ancestor to descendant (see xml for blockdescendents option)
+
+                // if it's a section tag, we make sure to style it differently
                 if (splitted_str[0].equals("section")){
                     title.setText(splitted_str[1]);
                     title.setTextSize(10);
@@ -76,8 +93,8 @@ public class SettingsFragment extends Fragment {
                     subtitle.setVisibility(View.GONE);
                     btn.setVisibility(View.GONE);
                     row.setEnabled(false);
-
                 }else{
+                    //else we make it into a tappable item and checkable if needed
                     title.setText(splitted_str[0]);
                     subtitle.setText(splitted_str[1]);
 
@@ -87,7 +104,6 @@ public class SettingsFragment extends Fragment {
                         Boolean isChecked = pref.getBoolean(SettingsActivity.PREF_KEYS_USER_ANON, false);
                         btn.setChecked(isChecked);
                     }
-
                 }
 
                 return row;
@@ -97,6 +113,8 @@ public class SettingsFragment extends Fragment {
         settingsListView.setAdapter(listViewAdapter);
 
         final Fragment self = this;
+
+        // we now have to handle the clicking event
         settingsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -108,15 +126,21 @@ public class SettingsFragment extends Fragment {
                 TextView subtitle = (TextView)row.findViewById(R.id.text_view_subtitle);
                 CheckBox btn = (CheckBox)row.findViewById(R.id.text_view_checkbox);
 
+                // if it's a section header, we dont need it to process any more
                 if (row.isEnabled()==false){
                     return;
                 }
 
+                // if the checkbox is visible, make sure its in the opposite state
                 if (splitted_str.length==3){
                     btn.setChecked(!btn.isChecked());
                 }
+
                 Intent intent;
                 DialogFragment newFragment;
+
+                // each row will yield a different action, from starting activities to editing the
+                // sharedpreferences
                 switch (position){
                     case 1:
                         intent = new Intent(getActivity(), SettingsActivity.class);
