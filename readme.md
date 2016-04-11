@@ -12,5 +12,13 @@ not contain any menu options, but does present the title. On the main activity, 
 The first is the start pane which will allow users to access the necessary options to start an exercise activity. History pane is
 left blank for now. The Setting pane will allow users to set global app fields.
 
+Edge cases:
+* Privacy setting persists
+* Orientation of gallery-picked image persists
+* Units preferred persists
+* Input Type and Activity Type persists
+* List view is presented correctly upon rotation
+
+
 
 

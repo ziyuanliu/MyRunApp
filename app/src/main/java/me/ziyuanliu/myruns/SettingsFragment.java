@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,10 +72,8 @@ public class SettingsFragment extends Fragment {
 
                 View row = convertView;
 
-                if (row==null){
-                    LayoutInflater inflater=(LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    row=inflater.inflate(R.layout.list_view_row, null);
-                }
+                LayoutInflater inflater=(LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                row=inflater.inflate(R.layout.list_view_row, null);
 
                 // set the item row
                 TextView title = (TextView)row.findViewById(R.id.text_view_title);
@@ -87,6 +86,7 @@ public class SettingsFragment extends Fragment {
 
                 // if it's a section tag, we make sure to style it differently
                 if (splitted_str[0].equals("section")){
+                    Log.d("wtf", splitted_str[1]);
                     title.setText(splitted_str[1]);
                     title.setTextSize(10);
                     title.setTextColor(Color.RED);
