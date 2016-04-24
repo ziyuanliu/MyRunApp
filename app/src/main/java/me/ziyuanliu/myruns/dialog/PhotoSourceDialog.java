@@ -1,4 +1,4 @@
-package me.ziyuanliu.myruns;
+package me.ziyuanliu.myruns.dialog;
 
 
 import android.app.Activity;
@@ -7,6 +7,9 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+
+import me.ziyuanliu.myruns.R;
+import me.ziyuanliu.myruns.SettingsActivity;
 
 public class PhotoSourceDialog extends DialogFragment {
     // Dialog ID return statuses

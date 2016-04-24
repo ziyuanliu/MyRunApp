@@ -29,6 +29,10 @@
             android:label="Map">
 
         </activity>
+        <activity android:name=".ExerciseEntryActivity"
+            android:label="Entry">
+
+        </activity>
     </application>
 
 </manifest>

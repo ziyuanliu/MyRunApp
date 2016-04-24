@@ -1,14 +1,13 @@
-package me.ziyuanliu.myruns;
+package me.ziyuanliu.myruns.fragment;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.Fragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.text.InputType;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+
+import me.ziyuanliu.myruns.ManualExerciseActivity;
 
 public class CommentDialogFragment extends DialogFragment {
     private static final String COMMENT_DIALOGUE_FRAGMENT = "COMMENT_DIALOGUE_FRAGMENT";
@@ -39,7 +38,9 @@ public class CommentDialogFragment extends DialogFragment {
         builder.setPositiveButton("Ok",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-
+                        String tag = getTag();
+                        String val = input.getText().toString();
+                        ManualExerciseActivity.hashMap.put(tag, val);
                     }
                 });
         builder.setNegativeButton("Cancel",

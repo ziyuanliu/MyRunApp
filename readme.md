@@ -20,5 +20,16 @@ Edge cases:
 * List view is presented correctly upon rotation
 
 
+##### Version 3
+------
+This version includes the sqlite implementation with usage of AsyncLoader for history fragment view
+and the loading of individual exercise entry. A Runnable was also used to delete entries.
+
+Edges:
+* Units are converted
+* Units from the preferences are used when inserting
+* Units from the preferences are used when displaying
+* end to end unit conversion
+
 
 

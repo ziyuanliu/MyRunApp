@@ -1,4 +1,4 @@
-package me.ziyuanliu.myruns;
+package me.ziyuanliu.myruns.fragment;
 
 import android.app.Fragment;
 import android.content.Context;
@@ -13,6 +13,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import java.util.Arrays;
+import java.util.List;
+
+import me.ziyuanliu.myruns.R;
+import me.ziyuanliu.myruns.SettingsActivity;
 
 import static android.widget.ArrayAdapter.*;
 
@@ -79,9 +85,9 @@ public class StartFragment extends Fragment {
         });
 
 
+
         return view;
 
     }
-
 }
 

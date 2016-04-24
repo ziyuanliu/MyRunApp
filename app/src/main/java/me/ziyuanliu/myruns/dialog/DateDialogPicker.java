@@ -1,4 +1,4 @@
-package me.ziyuanliu.myruns;
+package me.ziyuanliu.myruns.dialog;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -9,6 +9,8 @@ import android.widget.TimePicker;
 
 import android.text.format.DateFormat;
 import java.util.Calendar;
+
+import me.ziyuanliu.myruns.ManualExerciseActivity;
 
 /**
  * Created by ziyuanliu on 4/11/16.
@@ -30,6 +32,6 @@ public class DateDialogPicker extends DialogFragment
 
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-
+        ManualExerciseActivity.cal.set(year, monthOfYear, dayOfMonth);
     }
 }

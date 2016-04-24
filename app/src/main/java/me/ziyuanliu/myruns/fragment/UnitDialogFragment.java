@@ -1,4 +1,4 @@
-package me.ziyuanliu.myruns;
+package me.ziyuanliu.myruns.fragment;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -9,10 +9,11 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import me.ziyuanliu.myruns.R;
+import me.ziyuanliu.myruns.SettingsActivity;
 
 public class UnitDialogFragment extends DialogFragment {
     private static final String UNIT_DIALOGUE_FRAGMENT = "UNIT_DIALOGUE_FRAGMENT";

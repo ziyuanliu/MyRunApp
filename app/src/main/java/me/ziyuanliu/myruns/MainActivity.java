@@ -10,6 +10,9 @@ import android.view.View;
 
 import java.util.ArrayList;
 
+import me.ziyuanliu.myruns.fragment.HistoryFragment;
+import me.ziyuanliu.myruns.fragment.SettingsFragment;
+import me.ziyuanliu.myruns.fragment.StartFragment;
 import me.ziyuanliu.myruns.view.SlidingTabLayout;
 
 

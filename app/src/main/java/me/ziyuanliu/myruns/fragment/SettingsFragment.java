@@ -1,4 +1,4 @@
-package me.ziyuanliu.myruns;
+package me.ziyuanliu.myruns.fragment;
 
 import android.app.DialogFragment;
 import android.app.Fragment;
@@ -18,6 +18,9 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import me.ziyuanliu.myruns.R;
+import me.ziyuanliu.myruns.SettingsActivity;
 
 public class SettingsFragment extends Fragment {
 
