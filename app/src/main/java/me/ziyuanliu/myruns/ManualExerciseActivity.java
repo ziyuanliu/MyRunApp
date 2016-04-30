@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.w3c.dom.Comment;
 
@@ -29,6 +30,10 @@ import me.ziyuanliu.myruns.fragment.CommentDialogFragment;
  * Created by ziyuanliu on 4/11/16.
  */
 public class ManualExerciseActivity extends Activity {
+    /*
+    for ease of usage, I've decided to use static variable pattern on this activity,
+    we can always assume that there's only one entry at a time
+     */
     public static Calendar cal;
     public static HashMap<String, String> hashMap;
     SharedPreferences pref;
@@ -56,8 +61,11 @@ public class ManualExerciseActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // we need to reset the static values
         cal = Calendar.getInstance();
         hashMap = new HashMap<String, String>();
+
+        // get the datasource context and the sharedpreference
         datasource = new ExerciseEntryDatasource(this);
         pref = this.getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, Context.MODE_PRIVATE);
 
@@ -151,15 +159,21 @@ public class ManualExerciseActivity extends Activity {
         super.onDestroy();
     }
 
+    /*
+    this method will be used to save each exercise entry into the sqlite db
+     */
     public void onExerciseSave(View view) throws IOException {
+        // first grab the input and activity types and store them
         int inputType = pref.getInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, -1);
         int activityType = pref.getInt(SettingsActivity.PREF_KEYS_USER_ACTIVITY_TYPE, -1);
+
         ExerciseEntry entry = new ExerciseEntry(getApplicationContext());
         entry.setmDateTime(this.cal);
         entry.setmComment(this.hashMap.get(TAG_COMMENT));
         entry.setmInputType(inputType);
         entry.setmActivityType(activityType);
 
+        // values derived from dialogs will be stored in the static hashmap
         if (this.hashMap.containsKey(TAG_CALORIES))
             entry.setmCalorie(Integer.valueOf(this.hashMap.get(TAG_CALORIES)));
 
@@ -174,18 +188,24 @@ public class ManualExerciseActivity extends Activity {
             int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
 
             if (itemChoice==1){
-                // convert feet to meters
+                // convert feet to meters, we store our raw distance in metric
                 dist *=0.3048;
             }
             entry.setmDistance(dist);
         }
 
-
+        // duration is in minutes
         if (this.hashMap.containsKey(TAG_DURATION))
             entry.setmDuration(Integer.valueOf(this.hashMap.get(TAG_DURATION)));
+
         datasource.open();
         ExerciseEntry e = datasource.createExerciseEntry(entry);
         datasource.close();
+        Toast.makeText(this, "Entry #"+e.getId()+" created", Toast.LENGTH_LONG).show();
+
+        // we need to reset the static variables
+        this.cal = Calendar.getInstance();
+        this.hashMap.clear();
         finish();
     }
 

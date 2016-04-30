@@ -144,7 +144,7 @@ public class ExerciseEntryDatasource {
     }
 
     /*
-    the orm helper, translates everything to
+    the orm helper, translates everything to Exercise Entry
      */
     private ExerciseEntry cursorToEntry(Cursor cursor){
 
@@ -160,7 +160,7 @@ public class ExerciseEntryDatasource {
         cal.setTime(date);
 
         entry.setmDateTime(cal);
-        entry.setmDuration(cursor.getInt(4));
+        entry.setmDuration(cursor.getInt(4)/60.0);
         entry.setmDistance(cursor.getDouble(5));
         entry.setmAvgPace(cursor.getDouble(6));
         entry.setmAvgSpeed(cursor.getDouble(7));

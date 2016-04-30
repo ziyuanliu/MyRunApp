@@ -32,6 +32,7 @@ public class ExerciseEntryActivity extends Activity  implements LoaderManager.Lo
     }
 
     public boolean deleteEntryClicked(MenuItem item){
+        // make a runnable thread to delete the exercise entry
         Runnable deleteThread = new Runnable() {
             @Override
             public void run() {
@@ -50,8 +51,12 @@ public class ExerciseEntryActivity extends Activity  implements LoaderManager.Lo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_exercise_entry);
+
+        // get the rowId passed in here
         datasource = new ExerciseEntryDatasource(getApplicationContext());
         this.rowId = getIntent().getExtras().getLong("rowId");
+
+        // start the asyncloader
         getLoaderManager().initLoader(0, null, this);
     }
 
@@ -62,6 +67,7 @@ public class ExerciseEntryActivity extends Activity  implements LoaderManager.Lo
 
     @Override
     public void onLoadFinished(Loader<ExerciseEntry> loader, ExerciseEntry data) {
+        // we now make sure that the edittext fields are populated
         EditText edittext = (EditText)findViewById(R.id.inputTypeEditText);
         edittext.setText(data.inputTypeFromIndex());
 
@@ -102,6 +108,7 @@ public class ExerciseEntryActivity extends Activity  implements LoaderManager.Lo
 
         @Override
         public ExerciseEntry loadInBackground() {
+            // this is what we do in the background asynchronously
             datasource.open();
             ExerciseEntry retval = datasource.fetchEntryByIndex(ExerciseEntryActivity.rowId);
             datasource.close();

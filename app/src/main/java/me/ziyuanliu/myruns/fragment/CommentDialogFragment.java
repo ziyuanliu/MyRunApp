@@ -39,8 +39,14 @@ public class CommentDialogFragment extends DialogFragment {
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         String tag = getTag();
-                        String val = input.getText().toString();
-                        ManualExerciseActivity.hashMap.put(tag, val);
+
+                        // this is where we store the string data in the hashmap
+                        // for each manual exercise entry
+                        if (tag!=null){
+                            String val = input.getText().toString();
+                            ManualExerciseActivity.hashMap.put(tag, val);
+                        }
+
                     }
                 });
         builder.setNegativeButton("Cancel",

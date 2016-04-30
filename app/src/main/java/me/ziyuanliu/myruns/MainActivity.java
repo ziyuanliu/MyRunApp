@@ -65,7 +65,7 @@ public class MainActivity extends Activity{
         SharedPreferences pref = getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, MODE_PRIVATE);
         boolean isMapActivity = pref.getInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, 0) > 0;
 
-        Intent intent = new Intent(this, isMapActivity ? GPSExerciseActivity.class : ManualExerciseActivity.class);
+        Intent intent = new Intent(this, isMapActivity ? MapExerciseActivity.class : ManualExerciseActivity.class);
         startActivity(intent);
     }
 

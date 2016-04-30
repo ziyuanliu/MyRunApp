@@ -152,18 +152,28 @@ public class ExerciseEntry {
         return mLocationList;
     }
 
+    /*
+    returns the String Input Type
+     */
     public String inputTypeFromIndex(){
         int index = this.getmInputType();
         List<String> myInputType = Arrays.asList(con.getResources().getStringArray(R.array.input_type_array));
         return myInputType.get(index);
     }
 
+    /*
+    returns the String activity type
+     */
     public String activityTypeFromIndex(){
         int index = this.getmActivityType();
         List<String> myInputType = Arrays.asList(con.getResources().getStringArray(R.array.activity_type_array));
         return myInputType.get(index);
     }
 
+    /*
+    this method returns the string version of the distance variable, it will take sharedpreference in consideration
+    in terms of presentation and unit suffixes.
+     */
     public String getDistanceWithUnits(){
         double meterDistance = this.getmDistance();
         SharedPreferences pref = this.con.getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, Context.MODE_PRIVATE);
@@ -195,9 +205,10 @@ public class ExerciseEntry {
         String durationStr = minutes+ "mins "+seconds+"secs";
         return durationStr;
     }
+
     /*
-    how it will appear in the history tab, let's delimit everything as well
-    DISTANCE IS ALWAYS METRIC
+    how it will appear in the history tab, let's delimit the to string with '$' for title and
+    subtitle DISTANCE IS ALWAYS METRIC
      */
     public String toString(){
         String durationStr = getDurationStr();
