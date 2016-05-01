@@ -19,6 +19,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import me.ziyuanliu.myruns.ExerciseEntryActivity;
+import me.ziyuanliu.myruns.MapExerciseEntryActivity;
 import me.ziyuanliu.myruns.R;
 import me.ziyuanliu.myruns.database.ExerciseEntry;
 import me.ziyuanliu.myruns.database.ExerciseEntryDatasource;
@@ -62,9 +63,11 @@ public class HistoryFragment extends Fragment implements LoaderManager.LoaderCal
         entriesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getActivity(), ExerciseEntryActivity.class);
                 ExerciseEntry exerciseEntry = exerciseEntries.get(position);
+
+                Intent intent = new Intent(getActivity(), exerciseEntry.getmInputType() == 0 ? ExerciseEntryActivity.class : MapExerciseEntryActivity.class);
                 intent.putExtra("rowId", exerciseEntry.getId());
+
                 startActivity(intent);
             }
         });

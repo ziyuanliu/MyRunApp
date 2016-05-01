@@ -177,7 +177,7 @@ public class ExerciseEntryDatasource {
         try {
             while (in.available() > 0) {
                 String inTemp = in.readUTF();
-                String[] splittedTemp = inTemp.split("$");
+                String[] splittedTemp = inTemp.split("\\$");
 
                 LatLng lt = new LatLng(Double.parseDouble(splittedTemp[0]), Double.parseDouble(splittedTemp[1]));
                 locs.add(lt);

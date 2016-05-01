@@ -16,7 +16,9 @@ import android.os.Build;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -31,9 +33,13 @@ import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+
+import me.ziyuanliu.myruns.database.ExerciseEntry;
+import me.ziyuanliu.myruns.database.ExerciseEntryDatasource;
 
 public class MapExerciseActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -43,8 +49,11 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
     LocationManager locationManager;
     PolylineOptions rectOptions;
     Polyline polyline;
+    Location lastLocation;
 
     private int startTime;
+    private float currentCalorie;
+    private Calendar startCal;
 
     SharedPreferences pref;
 
@@ -135,8 +144,6 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
         TextView myLocationText;
         myLocationText = (TextView)findViewById(R.id.text_stats);
 
-        String latLongString = "No location found";
-        String addressString = "No address found";
 
         if (location != null) {
             // Update the map location.
@@ -155,10 +162,9 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
                 firstMarker = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.defaultMarker(
                         BitmapDescriptorFactory.HUE_RED)).title("Starting point"));
                 rectOptions = new PolylineOptions().add(firstMarker.getPosition());
-                rectOptions.add(whereAmI.getPosition());
 
-                Calendar c = Calendar.getInstance();
-                startTime = c.get(Calendar.SECOND);
+                startCal = Calendar.getInstance();
+                startTime = startCal.get(Calendar.SECOND);
             }else{
                 whereAmI = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.defaultMarker(
                         BitmapDescriptorFactory.HUE_GREEN)).title("Current Location."));
@@ -169,47 +175,21 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
             rectOptions.color(Color.RED);
             polyline = mMap.addPolyline(rectOptions);
 
-            double lat = location.getLatitude();
-            double lng = location.getLongitude();
-            latLongString = "Lat:" + lat + "\nLong:" + lng;
 
-            double latitude = location.getLatitude();
-            double longitude = location.getLongitude();
+            String avgSpeedStr = getAvgSpeedStr();
+            String currSpeedStr = getCurrentSpeedStr(location);
+            String climbStr = getClimbStr(location.getAltitude());
 
-            Geocoder gc = new Geocoder(this, Locale.getDefault());
+            String formatStr = "Type: Running\nAvg speed: %s\nCur speed: %s\nClimb: %s\nCalorie: %f\nDistance: %s";
 
-            if (!Geocoder.isPresent())
-                addressString = "No geocoder available";
-            else {
-                try {
-                    List<Address> addresses = gc.getFromLocation(latitude, longitude, 1);
-                    StringBuilder sb = new StringBuilder();
-                    if (addresses.size() > 0) {
-                        Address address = addresses.get(0);
+            currentCalorie = (getDistance() / 15.0f);
 
-                        for (int i = 0; i < address.getMaxAddressLineIndex(); i++)
-                            sb.append(address.getAddressLine(i)).append("\n");
+            String value = String.format(formatStr, avgSpeedStr, currSpeedStr, climbStr, currentCalorie, getDistanceStr());
 
-                        sb.append(address.getLocality()).append("\n");
-                        sb.append(address.getPostalCode()).append("\n");
-                        sb.append(address.getCountryName());
-                    }
-                    addressString = sb.toString();
-                } catch (IOException e) {
-                    Log.d("WHEREAMI", "IO Exception", e);
-                }
-            }
+            myLocationText.setText(value);
+
+            lastLocation = location;
         }
-
-        String avgSpeedStr = getAvgSpeedStr();
-        String currSpeedStr = getCurrentSpeedStr(location.getSpeed());
-        String climbStr = getClimbStr(location.getAltitude());
-        Log.d("some bs", location.getSpeed()+" "+location.getAltitude());
-        String formatStr = "Type: Running\nAvg speed: %s\n Cur speed: %s\n Climb: %s\nCalorie: %d\nDistance: %s";
-
-        String value = String.format(formatStr, avgSpeedStr, currSpeedStr, climbStr, 123, getDistanceStr());
-
-        myLocationText.setText(value);
     }
 
 
@@ -247,13 +227,12 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
     }
 
     private String getClimbStr(double c){
-        float climb = 0;
+        double climb = 0;
         int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
-        double avgSpeed = 0;
         if (itemChoice == 0){
-            avgSpeed = c/1000.0;
+            climb = c/1000.0;
         }else{
-            avgSpeed = c*0.000621371;
+            climb = c*0.000621371;
         }
         return climb+" "+ (itemChoice == 0? "kilometers" : "miles");
     }
@@ -273,13 +252,16 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
         return avgSpeed/hours+" "+ (itemChoice == 0? "km/h" : "m/h");
     }
 
-    private String getCurrentSpeedStr(float speed){
-        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
+    private String getCurrentSpeedStr(Location location){
         float currSpeed = 0;
-        if (itemChoice == 0){
-            currSpeed = speed/1000.0f;
-        }else{
-            currSpeed = speed*0.000621371f;
+        if (lastLocation != null){
+            currSpeed = lastLocation.distanceTo(location);
+        }
+
+        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
+
+        if (itemChoice != 0){
+            currSpeed = currSpeed*0.621371f;
         }
         return currSpeed+" "+ (itemChoice == 0? "km/h" : "m/h");
     }
@@ -302,16 +284,9 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
                     .getMap();
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
-                setUpMap();
-                // Configure the map display options
-
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
             }
         }
-    }
-
-    private void setUpMap() {
-//        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
 
     /**
@@ -328,8 +303,43 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        LatLng currentLoc;
+        if (lastLocation != null){
+            currentLoc = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+        }else{
+            currentLoc = new LatLng(-34, 151);
+
+        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLoc));
+    }
+
+    public void onCancelClicked(View view){
+        finish();
+    }
+
+    public void onSaveClicked(View view) throws IOException{
+        // first grab the input and activity types and store them
+        int inputType = pref.getInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, -1);
+        int activityType = pref.getInt(SettingsActivity.PREF_KEYS_USER_ACTIVITY_TYPE, -1);
+
+        ExerciseEntry entry = new ExerciseEntry(getApplicationContext());
+        entry.setmDateTime(this.startCal);
+        entry.setmCalorie((int)this.currentCalorie);
+        entry.setmInputType(inputType);
+        entry.setmActivityType(activityType);
+
+        double dist = getDistance();
+        entry.setmDistance(dist);
+
+        int timeElapse = Calendar.getInstance().get(Calendar.SECOND) - startTime;
+        entry.setmDuration(timeElapse);
+        entry.setmLocationList((ArrayList<LatLng>) rectOptions.getPoints());
+
+        ExerciseEntryDatasource datasource = new ExerciseEntryDatasource(this);
+        datasource.open();
+        ExerciseEntry e = datasource.createExerciseEntry(entry);
+        datasource.close();
+        Toast.makeText(this, "Entry #"+e.getId()+" created", Toast.LENGTH_LONG).show();
+        finish();
     }
 }

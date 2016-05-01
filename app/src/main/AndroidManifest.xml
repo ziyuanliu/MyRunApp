@@ -32,13 +32,13 @@
         </activity>
         <activity
             android:name=".SettingsActivity"
-            android:label="Settings"></activity>
+            android:label="Settings" />
         <activity
             android:name=".ManualExerciseActivity"
-            android:label="Manual Entry"></activity>
+            android:label="Manual Entry" />
         <activity
             android:name=".ExerciseEntryActivity"
-            android:label="Entry"></activity>
+            android:label="Entry" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -53,7 +53,10 @@
 
         <activity
             android:name=".MapExerciseActivity"
-            android:label="@string/title_activity_map_exercise"></activity>
+            android:label="@string/title_activity_map_exercise" />
+        <activity
+            android:name=".MapExerciseEntryActivity"
+            android:label="@string/title_activity_map_exercise_entry"></activity>
     </application>
 
 </manifest>
