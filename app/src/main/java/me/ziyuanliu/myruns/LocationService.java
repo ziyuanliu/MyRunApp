@@ -5,57 +5,42 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.widget.TextView;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import me.ziyuanliu.myruns.database.ExerciseEntry;
 
 /**
  * Created by ziyuanliu on 5/2/16.
- * help from the demo code
+ * help from the demo code binddemo
+ * instead of using the broadcast, I am using the
  */
 public class LocationService extends Service {
     private NotificationManager mNotificationManager;
-    private static boolean isRunning = false;
-
     LocationManager locationManager;
     SharedPreferences pref;
 
-    public final int LOCATION_PERMISSION = 123;
-    public Boolean hasStarted = false;
+    public static Boolean hasStarted = false;
     private static ExerciseEntry entry;
     public static String currentString;
     public static int startTime;
@@ -63,31 +48,22 @@ public class LocationService extends Service {
     public static Calendar startCal;
     public static float distance;
 
-    private List<Messenger> mClients = new ArrayList<Messenger>(); // Keeps
-    // track of
-    // all
-    // current
-    // registered
-    // clients.
+    private List<Messenger> mClients = new ArrayList<Messenger>();
     public static final int MSG_REGISTER_CLIENT = 1;
     public static final int MSG_UNREGISTER_CLIENT = 2;
     public static final int MSG_SET_INT_VALUE = 3;
-
-    // Reference to a Handler, which others can use to send messages to it. This
-    // allows for the implementation of message-based communication across
-    // processes, by creating a Messenger pointing to a Handler in one process,
-    // and handing that Messenger to another process.
+    public static final int MSG_FINISH_EXERCISE = 4;
 
     private final Messenger mMessenger = new Messenger(
-            new IncomingMessageHandler()); // Target we publish for clients to
-    // send messages to IncomingHandler.
-
-    private static final String TAG = "CS65";
+            new IncomingMessageHandler());
 
     public static ExerciseEntry getExerciseEntry(){
         return entry;
     }
 
+    /**
+     * This resets the variables, in case of a save, cancel. etc
+     */
     public void resetVars(){
         hasStarted = false;
         entry = new ExerciseEntry(getBaseContext());
@@ -101,7 +77,6 @@ public class LocationService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "S:onCreate(): Service Started.");
 
         String svcName= Context.LOCATION_SERVICE;
         locationManager = (LocationManager)getSystemService(svcName);
@@ -109,11 +84,14 @@ public class LocationService extends Service {
         initializeLocationManager();
         pref = getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, MODE_PRIVATE);
 
-        isRunning = true;
+        hasStarted = true;
     }
 
+    /**
+     * Essentially we need to make sure that the locationManager is initialize here, we ask
+     * for the permission in the MapExerciseActivity
+     */
     public void initializeLocationManager(){
-        Log.d(TAG, "INITIALIZED");
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.NO_REQUIREMENT);
         criteria.setPowerRequirement(Criteria.POWER_LOW);
@@ -139,19 +117,26 @@ public class LocationService extends Service {
         }
     }
 
+    /**
+     * Starts recording the locations to the entry
+     * */
     private void startRecording(){
         startCal = Calendar.getInstance();
         startTime = startCal.get(Calendar.SECOND);
     }
 
+    /**
+     * Adds the current point to the list of locations
+     * */
     private void addLocation(Location location){
         ArrayList<LatLng> list = entry.getmLocationList();
         LatLng latlng=fromLocationToLatLng(location);
         list.add(latlng);
         entry.setmLocationList(list);
+        Log.d("cs65", "the loc size is" + entry.getmLocationList().size());
     }
 
-    /*
+    /**
     returns the distance in meters :)
      */
     private float getDistance(){
@@ -190,6 +175,10 @@ public class LocationService extends Service {
         }
     }
 
+    /**
+     * This generates the climb to the correct string format -- taking in consideration
+     * of the preference units
+     * */
     private String getClimbStr(double c){
         double climb = 0;
         int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
@@ -219,6 +208,10 @@ public class LocationService extends Service {
         return avgSpeed/hours+" "+ (itemChoice == 0? "km/h" : "m/h");
     }
 
+    /**
+    * This converts the current speed to the correct string format -- taking in consideration
+     * of the preference units
+    * */
     private String getCurrentSpeedStr(Location location){
         float currSpeed = 0;
         ArrayList<LatLng> list = entry.getmLocationList();
@@ -238,6 +231,9 @@ public class LocationService extends Service {
         return currSpeed+" "+ (itemChoice == 0? "km/h" : "m/h");
     }
 
+    /**
+     * We do all of our updates here, we need to update the display string as well
+     * */
     private void updateWithNewLocation(Location location) {
         if (location != null) {
             String avgSpeedStr = getAvgSpeedStr();
@@ -250,13 +246,15 @@ public class LocationService extends Service {
 
             currentString = String.format(formatStr, avgSpeedStr, currSpeedStr, climbStr, currentCalorie, getDistanceStr());
 
-            // Update the map location.
+            // Update the exercise entry object.
             if (hasStarted == false){
                 hasStarted = true;
                 startRecording();
-            }else{
-                addLocation(location);
             }
+
+            addLocation(location);
+
+            // tell the map to draw the current state
             sendUpdate();
         }
     }
@@ -277,8 +275,6 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "S:onStartCommand(): Received start id " + startId + ": "
-                + intent);
         return START_STICKY; // Run until explicitly stopped.
     }
 
@@ -290,7 +286,7 @@ public class LocationService extends Service {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, MapExerciseActivity.class), 0);
         Notification notification = new Notification.Builder(this)
-                .setContentTitle("MyRuns")
+                .setContentTitle(this.getString(R.string.app_name))
                 .setContentText("Recording your exercise")
                 .setSmallIcon(R.drawable.icon)
                 .setContentIntent(contentIntent).build();
@@ -304,8 +300,6 @@ public class LocationService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "S:onBind() - return mMessenger.getBinder()");
-
         // getBinder()
         // Return the IBinder that this Messenger is using to communicate with
         // its associated Handler; that is, IncomingMessageHandler().
@@ -324,39 +318,42 @@ public class LocationService extends Service {
         while (messengerIterator.hasNext()) {
             Messenger messenger = messengerIterator.next();
             try {
-                // Send data as an Integer
+                // we send a placeholder integer, it doesn't matter at all though
                 messenger.send(Message.obtain(null, MSG_SET_INT_VALUE,
                         placeHolder, 0));
             } catch (RemoteException e) {
                 // The client is dead. Remove it from the list.
+                // Ideally we only need one client reference, instead of an arraylist
                 mClients.remove(messenger);
             }
         }
     }
 
     public static boolean isRunning() {
-        return isRunning;
+        return hasStarted;
     }
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "S:onDestroy():Service Stopped");
         super.onDestroy();
 
-        mNotificationManager.cancelAll(); // Cancel the persistent notification.
-        isRunning = false;
+        // we need to remove the notification from the top
+        mNotificationManager.cancelAll();
+        hasStarted = false;
+
+        // reset the variables, in case the service is destroyed, but not the activity
         resetVars();
     }
 
     /**
-     * Handle incoming messages from MainActivity
+     * Handle incoming messages from MapExerciseActivity
+     * we dont really care for any other values being sent in
+     * other than registration and unregistration
      */
     private class IncomingMessageHandler extends Handler { // Handler of
-        // incoming messages
-        // from clients.
+
         @Override
         public void handleMessage(Message msg) {
-            Log.d(TAG, "S:handleMessage: " + msg.what);
             switch (msg.what) {
                 case MSG_REGISTER_CLIENT:
                     mClients.add(msg.replyTo);
@@ -364,10 +361,11 @@ public class LocationService extends Service {
                     break;
                 case MSG_UNREGISTER_CLIENT:
                     mClients.remove(msg.replyTo);
+                    break;
+                case MSG_FINISH_EXERCISE:
+                    mClients.remove(msg.replyTo);
+                    mNotificationManager.cancelAll();
                     resetVars();
-                    break;
-                case MSG_SET_INT_VALUE:
-                    break;
                 default:
                     super.handleMessage(msg);
             }

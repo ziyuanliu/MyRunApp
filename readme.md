@@ -25,11 +25,22 @@ Edge cases:
 This version includes the sqlite implementation with usage of AsyncLoader for history fragment view
 and the loading of individual exercise entry. A Runnable was also used to delete entries.
 
-Edges:
+Edge Cases:
 * Units are converted
 * Units from the preferences are used when inserting
 * Units from the preferences are used when displaying
 * end to end unit conversion
+
+##### Version 4
+------
+This version includes the Map Location Manager, MapView, NotificationManager, and Services.
+(worked with Richard Cornew)
+
+Edge Cases:
+* Map is redrawn on onCreate
+* LocationService sends new locations via Message Handler
+* GPS and Automatic saves correctly in the same format as Manual entry
+* Notification leads back to Map Activity correctly.
 
 
 
