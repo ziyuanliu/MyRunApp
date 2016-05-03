@@ -2,7 +2,10 @@ package me.ziyuanliu.myruns;
 
 import android.Manifest;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -11,8 +14,13 @@ import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
+//import android.location.LocationManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,6 +40,7 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -41,21 +50,31 @@ import java.util.Locale;
 import me.ziyuanliu.myruns.database.ExerciseEntry;
 import me.ziyuanliu.myruns.database.ExerciseEntryDatasource;
 
-public class MapExerciseActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapExerciseActivity extends FragmentActivity implements OnMapReadyCallback, ServiceConnection {
 
     private GoogleMap mMap;
     public Marker whereAmI;
     public Marker firstMarker;
-    LocationManager locationManager;
+//    LocationManager locationManager;
     PolylineOptions rectOptions;
     Polyline polyline;
-    Location lastLocation;
+    LatLng lastLocation;
 
     private int startTime;
     private float currentCalorie;
     private Calendar startCal;
 
     SharedPreferences pref;
+
+    private Messenger mServiceMessenger = null;
+    boolean mIsBound;
+
+    private static final String TAG = "CS65";
+
+    private final Messenger mMessenger = new Messenger(
+            new IncomingMessageHandler());
+
+    private ServiceConnection mConnection = this;
 
     public final int LOCATION_PERMISSION = 123;
 
@@ -75,48 +94,55 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
         setUpMapIfNeeded();
 
         String svcName= Context.LOCATION_SERVICE;
-        locationManager = (LocationManager)getSystemService(svcName);
+//        locationManager = (LocationManager)getSystemService(svcName);
+
+        mIsBound = false; // by default set this to unbound
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION);
         }else{
             initializeMap();
         }
+
     }
 
 
     protected void initializeMap(){
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.NO_REQUIREMENT);
-        criteria.setPowerRequirement(Criteria.POWER_LOW);
-        criteria.setAltitudeRequired(true);
-        criteria.setSpeedRequired(true);
-        criteria.setBearingRequired(false);
-        criteria.setSpeedRequired(true);
-        criteria.setCostAllowed(true);
-        String provider = locationManager.getBestProvider(criteria, true);
+//        Criteria criteria = new Criteria();
+//        criteria.setAccuracy(Criteria.NO_REQUIREMENT);
+//        criteria.setPowerRequirement(Criteria.POWER_LOW);
+//        criteria.setAltitudeRequired(true);
+//        criteria.setSpeedRequired(true);
+//        criteria.setBearingRequired(false);
+//        criteria.setSpeedRequired(true);
+//        criteria.setCostAllowed(true);
+//        String provider = locationManager.getBestProvider(criteria, true);
 
-        Location l = locationManager.getLastKnownLocation(provider);
-
-        LatLng latlng=fromLocationToLatLng(l);
-
-
-        whereAmI=mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.defaultMarker(
-                BitmapDescriptorFactory.HUE_GREEN)));
+//        Location l = locationManager.getLastKnownLocation(provider);
+//
+//        LatLng latlng=fromLocationToLatLng(l);
+//
+//
+//        whereAmI=mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.defaultMarker(
+//                BitmapDescriptorFactory.HUE_GREEN)));
 
         // Zoom in
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng,
-                17));
 
-        updateWithNewLocation(l);
-
-        if (locationManager != null) {
-            if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                    || checkCallingOrSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                locationManager.requestLocationUpdates(provider, 2000, 10,
-                        locationListener);
-            }
+        if (!LocationService.isRunning()){
+            startService(new Intent(MapExerciseActivity.this, LocationService.class));
         }
+        doBindService();
+
+
+
+
+//        if (locationManager != null) {
+//            if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+//                    || checkCallingOrSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+//                locationManager.requestLocationUpdates(provider, 2000, 10,
+//                        locationListener);
+//            }
+//        }
     }
     @Override
     protected void onResume() {
@@ -126,7 +152,6 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
 
     public static LatLng fromLocationToLatLng(Location location){
         return new LatLng(location.getLatitude(), location.getLongitude());
-
     }
 
 
@@ -140,15 +165,13 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
         }
     }
 
-    private void updateWithNewLocation(Location location) {
+    private void updateWithNewLocation(LatLng latlng) {
         TextView myLocationText;
         myLocationText = (TextView)findViewById(R.id.text_stats);
 
 
-        if (location != null) {
+        if (latlng != null) {
             // Update the map location.
-
-            LatLng latlng=fromLocationToLatLng(location);
 
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng,
                     17));
@@ -175,20 +198,9 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
             rectOptions.color(Color.RED);
             polyline = mMap.addPolyline(rectOptions);
 
+            myLocationText.setText(LocationService.currentString);
 
-            String avgSpeedStr = getAvgSpeedStr();
-            String currSpeedStr = getCurrentSpeedStr(location);
-            String climbStr = getClimbStr(location.getAltitude());
-
-            String formatStr = "Type: Running\nAvg speed: %s\nCur speed: %s\nClimb: %s\nCalorie: %f\nDistance: %s";
-
-            currentCalorie = (getDistance() / 15.0f);
-
-            String value = String.format(formatStr, avgSpeedStr, currSpeedStr, climbStr, currentCalorie, getDistanceStr());
-
-            myLocationText.setText(value);
-
-            lastLocation = location;
+            lastLocation = latlng;
         }
     }
 
@@ -196,85 +208,86 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
     /*
     returns the distance in meters :)
      */
-    private float getDistance(){
-        float sum = 0;
-        LatLng lastP = null;
-        for (LatLng curr: rectOptions.getPoints()){
-            if (lastP == null){
-                lastP = curr;
-                continue;
-            }
+//    private float getDistance(){
+//        float sum = 0;
+//        LatLng lastP = null;
+//        for (LatLng curr: rectOptions.getPoints()){
+//            if (lastP == null){
+//                lastP = curr;
+//                continue;
+//            }
+//
+//            float[] results = new float[1];
+//            Location.distanceBetween(lastP.latitude, lastP.longitude, curr.latitude, curr.longitude, results);
+//
+//            sum += results[0];
+//            lastP = curr;
+//        }
+//
+//        return sum;
+//    }
+//
+//    private String getDistanceStr(){
+//        // 0 is metric system
+//        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
+//        float meterDistance = getDistance();
+//        if (itemChoice == 0){
+//            return meterDistance/1000.0+ " Kilometers";
+//        }else{
+//            return meterDistance*0.000621371+ " Miles";
+//        }
+//    }
+//
+//    private String getClimbStr(double c){
+//        double climb = 0;
+//        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
+//        if (itemChoice == 0){
+//            climb = c/1000.0;
+//        }else{
+//            climb = c*0.000621371;
+//        }
+//        return climb+" "+ (itemChoice == 0? "kilometers" : "miles");
+//    }
+//
+//    private String getAvgSpeedStr(){
+//        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
+//        float avgSpeed;
+//        float distMeter = getDistance();
+//        if (itemChoice == 0){
+//            avgSpeed = distMeter/1000.0f;
+//        }else{
+//            avgSpeed = distMeter*0.000621371f;
+//        }
+//
+//        float timeElapsedSeconds = Calendar.getInstance().get(Calendar.SECOND) - startTime;
+//        float hours = timeElapsedSeconds/60.0f/60.0f;
+//        return avgSpeed/hours+" "+ (itemChoice == 0? "km/h" : "m/h");
+//    }
+//
+//    private String getCurrentSpeedStr(Location location){
+//        float currSpeed = 0;
+//        if (lastLocation != null){
+//            currSpeed = lastLocation.distanceTo(location);
+//        }
+//
+//        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
+//
+//        if (itemChoice != 0){
+//            currSpeed = currSpeed*0.621371f;
+//        }
+//        return currSpeed+" "+ (itemChoice == 0? "km/h" : "m/h");
+//    }
 
-            float[] results = new float[1];
-            Location.distanceBetween(lastP.latitude, lastP.longitude, curr.latitude, curr.longitude, results);
-
-            sum += results[0];
-            lastP = curr;
-        }
-
-        return sum;
-    }
-
-    private String getDistanceStr(){
-        // 0 is metric system
-        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
-        float meterDistance = getDistance();
-        if (itemChoice == 0){
-            return meterDistance/1000.0+ " Kilometers";
-        }else{
-            return meterDistance*0.000621371+ " Miles";
-        }
-    }
-
-    private String getClimbStr(double c){
-        double climb = 0;
-        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
-        if (itemChoice == 0){
-            climb = c/1000.0;
-        }else{
-            climb = c*0.000621371;
-        }
-        return climb+" "+ (itemChoice == 0? "kilometers" : "miles");
-    }
-
-    private String getAvgSpeedStr(){
-        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
-        float avgSpeed;
-        float distMeter = getDistance();
-        if (itemChoice == 0){
-            avgSpeed = distMeter/1000.0f;
-        }else{
-            avgSpeed = distMeter*0.000621371f;
-        }
-
-        float timeElapsedSeconds = Calendar.getInstance().get(Calendar.SECOND) - startTime;
-        float hours = timeElapsedSeconds/60.0f/60.0f;
-        return avgSpeed/hours+" "+ (itemChoice == 0? "km/h" : "m/h");
-    }
-
-    private String getCurrentSpeedStr(Location location){
-        float currSpeed = 0;
-        if (lastLocation != null){
-            currSpeed = lastLocation.distanceTo(location);
-        }
-
-        int itemChoice = pref.getInt(SettingsActivity.PREF_KEYS_USER_UNIT_TYPE,0);
-
-        if (itemChoice != 0){
-            currSpeed = currSpeed*0.621371f;
-        }
-        return currSpeed+" "+ (itemChoice == 0? "km/h" : "m/h");
-    }
-
-    private final LocationListener locationListener = new LocationListener() {
-        public void onLocationChanged(Location location) {
-            updateWithNewLocation(location);
-        }
-        public void onProviderDisabled(String provider) {}
-        public void onProviderEnabled(String provider) {}
-        public void onStatusChanged(String provider, int status,
-                                    Bundle extras) {}
-    };
+//    private final LocationListener locationListener = new LocationListener() {
+//        public void onLocationChanged(Location location) {
+//            LatLng l = fromLocationToLatLng(location);
+//            updateWithNewLocation(l);
+//        }
+//        public void onProviderDisabled(String provider) {}
+//        public void onProviderEnabled(String provider) {}
+//        public void onStatusChanged(String provider, int status,
+//                                    Bundle extras) {}
+//    };
 
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
@@ -302,18 +315,34 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        LatLng currentLoc;
-        if (lastLocation != null){
-            currentLoc = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-        }else{
-            currentLoc = new LatLng(-34, 151);
+        ExerciseEntry e = LocationService.getExerciseEntry();
+        if (e != null){
+            ArrayList<LatLng> locList = e.getmLocationList();
+            LatLng lastLoc = null;
+            for (LatLng l: locList){
+                updateWithNewLocation(l);
+                lastLoc = l;
+            }
 
+            if (lastLoc != null){
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLoc,
+                        17));
+            }
         }
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLoc));
+
+        // Add a marker in Sydney and move the camera
+//        LatLng currentLoc;
+//        if (lastLocation != null){
+//            currentLoc = lastLocation;
+//        }else{
+//            currentLoc = new LatLng(-34, 151);
+//
+//        }
+//        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLoc));
     }
 
     public void onCancelClicked(View view){
+        doUnbindService();
         finish();
     }
 
@@ -322,24 +351,126 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
         int inputType = pref.getInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, -1);
         int activityType = pref.getInt(SettingsActivity.PREF_KEYS_USER_ACTIVITY_TYPE, -1);
 
-        ExerciseEntry entry = new ExerciseEntry(getApplicationContext());
-        entry.setmDateTime(this.startCal);
-        entry.setmCalorie((int)this.currentCalorie);
+        ExerciseEntry entry = LocationService.getExerciseEntry();
+        entry.setmDateTime(LocationService.startCal);
+        entry.setmCalorie((int)LocationService.currentCalorie);
         entry.setmInputType(inputType);
         entry.setmActivityType(activityType);
+        entry.setmDistance(LocationService.distance);
 
-        double dist = getDistance();
-        entry.setmDistance(dist);
-
-        int timeElapse = Calendar.getInstance().get(Calendar.SECOND) - startTime;
+        int timeElapse = Calendar.getInstance().get(Calendar.SECOND) - LocationService.startTime;
         entry.setmDuration(timeElapse);
-        entry.setmLocationList((ArrayList<LatLng>) rectOptions.getPoints());
 
         ExerciseEntryDatasource datasource = new ExerciseEntryDatasource(this);
         datasource.open();
         ExerciseEntry e = datasource.createExerciseEntry(entry);
         datasource.close();
         Toast.makeText(this, "Entry #"+e.getId()+" created", Toast.LENGTH_LONG).show();
+        doUnbindService();
         finish();
+    }
+
+    /**
+     * Bind this Activity to TimerService
+     */
+    private void doBindService() {
+        Log.d(TAG, "C:doBindService()");
+        bindService(new Intent(this, LocationService.class), mConnection,
+                Context.BIND_AUTO_CREATE);
+        mIsBound = true;
+    }
+
+    /**
+     * Un-bind this Activity to TimerService
+     */
+    private void doUnbindService() {
+        Log.d(TAG, "C:doUnBindService()");
+        if (mIsBound) {
+            // If we have received the service, and hence registered with it,
+            // then now is the time to unregister.
+            if (mServiceMessenger != null) {
+                try {
+                    Message msg = Message.obtain(null,
+                            LocationService.MSG_UNREGISTER_CLIENT);
+                    msg.replyTo = mMessenger;
+                    mServiceMessenger.send(msg);
+                } catch (RemoteException e) {
+                    // There is nothing special we need to do if the service has
+                    // crashed.
+                }
+            }
+            // Detach our existing connection.
+            unbindService(mConnection);
+            mIsBound = false;
+        }
+    }
+
+    // This is called when the connection with the service has been
+    // established, giving us the service object we can use to
+    // interact with the service.
+
+    // bindService(new Intent(this, MyService.class), mConnection,
+    // Context.BIND_AUTO_CREATE) calls onbind in the service which
+    // returns an IBinder to the client.
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        Log.d(TAG, "C:onServiceConnected()");
+        mServiceMessenger = new Messenger(service);
+        try {
+            Message msg = Message.obtain(null, LocationService.MSG_REGISTER_CLIENT);
+            msg.replyTo = mMessenger;
+            Log.d(TAG, "C: TX MSG_REGISTER_CLIENT");
+            mServiceMessenger.send(msg);
+        } catch (RemoteException e) {
+            // In this case the service has crashed before we could even do
+            // anything with it
+        }
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        Log.d(TAG, "C:onServiceDisconnected()");
+        // This is called when the connection with the service has been
+        // unexpectedly disconnected - process crashed.
+        mServiceMessenger = null;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "C:onDestroy()");
+        try {
+            doUnbindService();
+        } catch (Throwable t) {
+            Log.e(TAG, "Failed to unbind from the service", t);
+        }
+    }
+
+    /**
+     * Handle incoming messages from TimerService
+     */
+    private class IncomingMessageHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            Log.d(TAG, "C:IncomingHandler:handleMessage");
+            switch (msg.what) {
+                case LocationService.MSG_SET_INT_VALUE:
+                    updateMap();
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
+
+    public void updateMap(){
+        ExerciseEntry entry = LocationService.getExerciseEntry();
+        ArrayList<LatLng> list = entry.getmLocationList();
+        LatLng pointToAdd = list.get(list.size()-1);
+
+        updateWithNewLocation(pointToAdd);
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pointToAdd,
+                17));
     }
 }

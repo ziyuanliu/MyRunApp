@@ -149,6 +149,9 @@ public class ExerciseEntry {
     }
 
     public ArrayList<LatLng> getmLocationList() {
+        if (mLocationList == null){
+            return new ArrayList<LatLng>();
+        }
         return mLocationList;
     }
 
