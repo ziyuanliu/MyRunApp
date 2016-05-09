@@ -42,5 +42,11 @@ Edge Cases:
 * GPS and Automatic saves correctly in the same format as Manual entry
 * Notification leads back to Map Activity correctly.
 
+##### Version 5
+------
+This version includes the automatic activity type detection. (work w/ Richard Cornew)
 
-
+It's an extension to version 4, the automatic activity features uses the same MapExerciseActivity to
+implement everything. With sensor detection, we make sure to keep it in the LocationService. We used
+an advance datastructure -- linkedhashmap as a LRU cache to keep the N most recent sensor information,
+which we will use to classify the current exercise. 
