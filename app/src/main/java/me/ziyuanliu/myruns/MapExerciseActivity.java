@@ -61,10 +61,16 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
 
     public final int LOCATION_PERMISSION = 123;
 
+    public static Boolean isAutomatic;
+    public static int activityType;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_exercise);
+
+        isAutomatic = getIntent().getExtras().getBoolean("isAutomatic");
+        activityType = getIntent().getExtras().getInt("activityType");
 
         pref = getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, MODE_PRIVATE);
 
@@ -88,7 +94,10 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
 
     protected void initializeMap(){
         if (!LocationService.isRunning()){
-            startService(new Intent(MapExerciseActivity.this, LocationService.class));
+            Intent intent = new Intent(MapExerciseActivity.this, LocationService.class);
+            intent.putExtra("isAutomatic", isAutomatic);
+            intent.putExtra("activityType", activityType);
+            startService(intent);
         }
 
         doBindService();
@@ -198,7 +207,11 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
     public void onSaveClicked(View view) throws IOException{
         // first grab the input and activity types and store them
         int inputType = pref.getInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, -1);
+
         int activityType = pref.getInt(SettingsActivity.PREF_KEYS_USER_ACTIVITY_TYPE, -1);
+        if (isAutomatic){
+            activityType = (int)LocationService.activityType;
+        }
 
         ExerciseEntry entry = LocationService.getExerciseEntry();
         entry.setmDateTime(LocationService.startCal);

@@ -9,6 +9,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -24,9 +28,13 @@ import android.util.Log;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import me.ziyuanliu.myruns.database.ExerciseEntry;
 
@@ -35,13 +43,15 @@ import me.ziyuanliu.myruns.database.ExerciseEntry;
  * help from the demo code binddemo
  * instead of using the broadcast, I am using the
  */
-public class LocationService extends Service {
+public class LocationService extends Service implements SensorEventListener{
     private NotificationManager mNotificationManager;
     LocationManager locationManager;
     SharedPreferences pref;
 
     public static Boolean hasStarted = false;
     private static ExerciseEntry entry;
+    private SensorManager sensorManager;
+
     public static String currentString;
     public static int startTime;
     public static float currentCalorie;
@@ -60,6 +70,11 @@ public class LocationService extends Service {
     public static ExerciseEntry getExerciseEntry(){
         return entry;
     }
+    public static double activityType = 0;
+
+    public LinkedHashMap<Integer, Double> queue;
+    public long lastTimeCheck = System.currentTimeMillis();
+    public boolean isAutomatic;
 
     /**
      * This resets the variables, in case of a save, cancel. etc
@@ -78,6 +93,8 @@ public class LocationService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        activityType = 0;
+
         String svcName= Context.LOCATION_SERVICE;
         locationManager = (LocationManager)getSystemService(svcName);
 
@@ -85,6 +102,59 @@ public class LocationService extends Service {
         pref = getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, MODE_PRIVATE);
 
         hasStarted = true;
+
+        if (isAutomatic){
+            sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+            sensorManager.registerListener(this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                    SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+
+        queue = new LinkedHashMap<Integer, Double>(){
+            @Override
+            protected boolean removeEldestEntry(Entry<Integer, Double> eldest) {
+                return this.size()>40;
+            }
+        };
+
+    }
+
+    @Override
+    public void onSensorChanged (SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            checkActivityType(event);
+        }
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    public void checkActivityType(SensorEvent event){
+        // Movement
+        float x = event.values[0];
+        float y = event.values[1];
+        float z = event.values[2];
+
+        float accelerationSquareRoot = (x * x + y * y + z * z)
+                / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
+        long actualTime = System.currentTimeMillis();
+
+        queue.put((int)actualTime, (double)accelerationSquareRoot);
+        long currentTime = System.currentTimeMillis();
+
+        if (currentTime - lastTimeCheck > 30000){
+            lastTimeCheck = currentTime;
+            Collection<Double> data = queue.values();
+            try {
+                activityType  = WekaClassifier.classify(data.toArray());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -161,7 +231,6 @@ public class LocationService extends Service {
             }else{
                 return sum*0.000621371f;
             }
-
     }
 
     private String getDistanceStr(){
@@ -231,6 +300,12 @@ public class LocationService extends Service {
         return currSpeed+" "+ (itemChoice == 0? "km/h" : "m/h");
     }
 
+    public String getActivityTypeStr(){
+        int actType = (int)activityType;
+        List<String> myInputType = Arrays.asList(getBaseContext().getResources().getStringArray(R.array.activity_type_array));
+        return myInputType.get((int)activityType);
+    }
+
     /**
      * We do all of our updates here, we need to update the display string as well
      * */
@@ -240,11 +315,11 @@ public class LocationService extends Service {
             String currSpeedStr = getCurrentSpeedStr(location);
             String climbStr = getClimbStr(location.getAltitude());
 
-            String formatStr = "Type: Running\nAvg speed: %s\nCur speed: %s\nClimb: %s\nCalorie: %f\nDistance: %s";
+            String formatStr = "Type: %s\nAvg speed: %s\nCur speed: %s\nClimb: %s\nCalorie: %f\nDistance: %s";
 
             currentCalorie = (getDistance() / 15.0f);
 
-            currentString = String.format(formatStr, avgSpeedStr, currSpeedStr, climbStr, currentCalorie, getDistanceStr());
+            currentString = String.format(formatStr, getActivityTypeStr(),avgSpeedStr, currSpeedStr, climbStr, currentCalorie, getDistanceStr());
 
             // Update the exercise entry object.
             if (hasStarted == false){
@@ -275,6 +350,8 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        isAutomatic = intent.getExtras().getBoolean("isAutomatic");
+        activityType = (double)intent.getExtras().getInt("activityType");
         return START_STICKY; // Run until explicitly stopped.
     }
 

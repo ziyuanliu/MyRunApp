@@ -36,8 +36,8 @@ public class ManualExerciseActivity extends Activity {
      */
     public static Calendar cal;
     public static HashMap<String, String> hashMap;
-    SharedPreferences pref;
 
+    SharedPreferences pref;
 
     public static final String TAG_DATE_PICKER = "datepicker";
     public static final String TAG_TIME_PICKER = "timepicker";
@@ -56,6 +56,8 @@ public class ManualExerciseActivity extends Activity {
     CommentDialogFragment commentDialogFragment;
 
     ExerciseEntryDatasource datasource;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

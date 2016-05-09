@@ -64,8 +64,13 @@ public class MainActivity extends Activity{
     public void startBtnClicked(View view){
         SharedPreferences pref = getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, MODE_PRIVATE);
         boolean isMapActivity = pref.getInt(SettingsActivity.PREF_KEYS_USER_INPUT_TYPE, 0) > 0;
+        int activityType = pref.getInt(SettingsActivity.PREF_KEYS_USER_ACTIVITY_TYPE, 0);
+        boolean isAutomatic = activityType == 2;
+
 
         Intent intent = new Intent(this, isMapActivity ? MapExerciseActivity.class : ManualExerciseActivity.class);
+        intent.putExtra("isAutomatic", isAutomatic);
+        intent.putExtra("activityType", activityType);
         startActivity(intent);
     }
 
