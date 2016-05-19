@@ -45,7 +45,7 @@ import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 
 
 public class HistoryFragment extends Fragment implements LoaderManager.LoaderCallbacks<ArrayList<ExerciseEntry>>{
-    public static String SERVER_ADDR = "http://10.0.2.2:8080";
+    public static String SERVER_ADDR = "http://spring-gift-421.appspot.com";
     private BroadcastReceiver mMessageReceiver;
     ListView entriesListView;
     ArrayAdapter<ExerciseEntry> listAdapter;

@@ -39,7 +39,7 @@ public class MainActivity extends Activity{
     private ArrayList<Fragment> fragments;
     private ActionTabsViewPagerAdapter actionTabsViewPagerAdapter;
 
-    public static String SERVER_ADDR = "http://10.0.2.2:8080";
+    public static String SERVER_ADDR = "http://spring-gift-421.appspot.com";
 
     /** Called when the activity is first created. Inspiration from actionbar file*/
     @Override
