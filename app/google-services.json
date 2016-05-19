@@ -1,0 +1,35 @@
+{
+  "project_info": {
+    "project_number": "374255966973",
+    "project_id": "gridsoc"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374255966973:android:a12533b4ddde956c",
+        "android_client_info": {
+          "package_name": "com.example.ziyuanliu.myapplication.backend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmvOeTOTrNMEpwN6I3MVDm-V30OYL0J2A"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

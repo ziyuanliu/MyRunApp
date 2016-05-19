@@ -7,9 +7,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 
 import com.google.android.gms.maps.model.LatLng;
+
+import org.json.JSONObject;
 
 import me.ziyuanliu.myruns.R;
 import me.ziyuanliu.myruns.SettingsActivity;
@@ -141,6 +144,8 @@ public class ExerciseEntry {
     }
 
     public String getmComment() {
+        if (mComment == null)
+            return "";
         return mComment;
     }
 
@@ -222,5 +227,23 @@ public class ExerciseEntry {
 
         return inputType +": "+activityType+", "+datetime
                 +"$"+getDistanceWithUnits()+", "+durationStr;
+    }
+
+
+    public JSONObject toJson(){
+        HashMap<String, String> retval = new HashMap<String, String>();
+        retval.put("mId", String.valueOf(this.id));
+        retval.put("mInputType", inputTypeFromIndex());
+        retval.put("mActivityType", activityTypeFromIndex());
+        retval.put("mDateTime", getDatetimeStr());
+        retval.put("mDuration", getDurationStr());
+        retval.put("mDistance", getDistanceWithUnits());
+        retval.put("mAvgSpeed", String.valueOf(getmAvgSpeed()));
+        retval.put("mCalorie", String.valueOf(getmCalorie()));
+        retval.put("mClimb", String.valueOf(getmClimb()));
+        retval.put("mHeartRate", String.valueOf(getmHeartRate()));
+        retval.put("mComment", getmComment());
+
+        return new JSONObject(retval);
     }
 }

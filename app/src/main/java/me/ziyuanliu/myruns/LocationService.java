@@ -70,7 +70,7 @@ public class LocationService extends Service implements SensorEventListener{
     public static ExerciseEntry getExerciseEntry(){
         return entry;
     }
-    public static double activityType = 0;
+    public static double activityType;
 
     public LinkedHashMap<Integer, Double> queue;
     public long lastTimeCheck = System.currentTimeMillis();
@@ -93,7 +93,7 @@ public class LocationService extends Service implements SensorEventListener{
     public void onCreate() {
         super.onCreate();
 
-        activityType = 0;
+        activityType = -1;
 
         String svcName= Context.LOCATION_SERVICE;
         locationManager = (LocationManager)getSystemService(svcName);
@@ -102,14 +102,6 @@ public class LocationService extends Service implements SensorEventListener{
         pref = getSharedPreferences(SettingsActivity.PREF_KEYS_USER_DETAIL, MODE_PRIVATE);
 
         hasStarted = true;
-
-        if (isAutomatic){
-            sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-            sensorManager.registerListener(this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                    SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
 
         queue = new LinkedHashMap<Integer, Double>(){
             @Override
@@ -144,13 +136,14 @@ public class LocationService extends Service implements SensorEventListener{
         long actualTime = System.currentTimeMillis();
 
         queue.put((int)actualTime, (double)accelerationSquareRoot);
-        long currentTime = System.currentTimeMillis();
 
-        if (currentTime - lastTimeCheck > 30000){
-            lastTimeCheck = currentTime;
+        if (actualTime - lastTimeCheck > 10000){
+            lastTimeCheck = actualTime;
             Collection<Double> data = queue.values();
             try {
                 activityType  = WekaClassifier.classify(data.toArray());
+                Log.d("cs65", "classifying now! "+String.valueOf(activityType));
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -203,7 +196,6 @@ public class LocationService extends Service implements SensorEventListener{
         LatLng latlng=fromLocationToLatLng(location);
         list.add(latlng);
         entry.setmLocationList(list);
-        Log.d("cs65", "the loc size is" + entry.getmLocationList().size());
     }
 
     /**
@@ -300,8 +292,16 @@ public class LocationService extends Service implements SensorEventListener{
         return currSpeed+" "+ (itemChoice == 0? "km/h" : "m/h");
     }
 
+    /**
+     * we need to generate the activity type based on what we have, if its automatic, we need to wait
+     * 30 seconds
+     * @return string
+     */
     public String getActivityTypeStr(){
         int actType = (int)activityType;
+        if (actType == -1){
+            return "sensing";
+        }
         List<String> myInputType = Arrays.asList(getBaseContext().getResources().getStringArray(R.array.activity_type_array));
         return myInputType.get((int)activityType);
     }
@@ -351,7 +351,14 @@ public class LocationService extends Service implements SensorEventListener{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         isAutomatic = intent.getExtras().getBoolean("isAutomatic");
-        activityType = (double)intent.getExtras().getInt("activityType");
+        if (!isAutomatic){
+            activityType = (double)intent.getExtras().getInt("activityType");
+        }else{
+            sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+            sensorManager.registerListener(this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                    SensorManager.SENSOR_DELAY_NORMAL);
+        }
         return START_STICKY; // Run until explicitly stopped.
     }
 

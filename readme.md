@@ -48,5 +48,21 @@ This version includes the automatic activity type detection. (work w/ Richard Co
 
 It's an extension to version 4, the automatic activity features uses the same MapExerciseActivity to
 implement everything. With sensor detection, we make sure to keep it in the LocationService. We used
-an advance datastructure -- linkedhashmap as a LRU cache to keep the N most recent sensor information,
+an advance data structure -- linkedhashmap as a LRU cache to keep the N most recent sensor information,
 which we will use to classify the current exercise. 
+
+- Note that we wait for 10 seconds before classifying your exercise -- often times, we stop before
+we record our exercises.
+
+##### Version 6
+------
+Peer-coded with Richard Cornew.
+
+DEMO provided by GCMDemo is taken into inspiration. We use query.do and refactored it into sync.do
+to fullfil or post and get method requests.
+
+For deletion, we also use the same mechanisms: however, we included GCM to registration and message sending!
+Upon deletion message, the app will delete the ID passed back via GCM
+
+For GCM receive, we check if the fragment is visible or not. If visible, we reload the LoadManager again
+to reload the database into history fragment everytime. That we can get the latest entries.

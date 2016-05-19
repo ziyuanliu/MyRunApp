@@ -217,7 +217,7 @@ public class MapExerciseActivity extends FragmentActivity implements OnMapReadyC
         entry.setmDateTime(LocationService.startCal);
         entry.setmCalorie((int)LocationService.currentCalorie);
         entry.setmInputType(inputType);
-        entry.setmActivityType(activityType);
+        entry.setmActivityType(activityType > -1 ? activityType : 0);
         entry.setmDistance(LocationService.distance);
 
         int timeElapse = Calendar.getInstance().get(Calendar.SECOND) - LocationService.startTime;
