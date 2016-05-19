@@ -50,6 +50,20 @@ public class ExerciseEntry {
     public String mHeartRate;        // Heart rate
     public String mComment;       // Comments
 
+    /**
+     * constructor to create the object from different fields
+     * @param _id
+     * @param _inputType
+     * @param _activityType
+     * @param _datetime
+     * @param _duration
+     * @param _distance
+     * @param _avgSpeed
+     * @param _calorie
+     * @param _climb
+     * @param _heartRate
+     * @param _comment
+     */
     public ExerciseEntry(String _id, String _inputType, String _activityType, String _datetime, String _duration, String _distance,
                          String _avgSpeed, String _calorie, String _climb, String _heartRate, String _comment) {
         mId = _id;
@@ -65,6 +79,11 @@ public class ExerciseEntry {
         mComment = _comment;
     }
 
+    /**
+     * constructor to create the object from a jsonobject
+     * @param obj
+     * @throws org.json.JSONException
+     */
     public ExerciseEntry(JSONObject obj) throws org.json.JSONException {
 
         mId = obj.getString("mId");
@@ -80,11 +99,20 @@ public class ExerciseEntry {
             mComment = obj.getString("mComment");
     }
 
+    /**
+     * this determines the uniqueness of the object
+     * @return
+     */
     @Override
     public int hashCode() {
         return Integer.valueOf(this.mId);
     }
 
+    /**
+     * this determines if two Exercise Entries are equivalent.
+     * @param obj
+     * @return
+     */
     @Override
     public boolean equals(Object obj) {
         return obj.hashCode() == this.hashCode();

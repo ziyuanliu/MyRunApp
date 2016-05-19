@@ -97,11 +97,15 @@ public class HistoryFragment extends Fragment implements LoaderManager.LoaderCal
         return view;
     }
 
-
+    /**
+     * checks for visibility here
+     * @param visible
+     */
     @Override
     public void setMenuVisibility(final boolean visible) {
         super.setMenuVisibility(visible);
         if (visible) {
+            // if the view is visible reload the database onto the listview
             getLoaderManager().restartLoader(0, null, this);
         }
     }
@@ -120,6 +124,11 @@ public class HistoryFragment extends Fragment implements LoaderManager.LoaderCal
         return new DataLoader(getActivity());
     }
 
+    /**
+     * on load finish notifies the change, and the listAdapter is notified of the changes
+     * @param loader
+     * @param data
+     */
     @Override
     public void onLoadFinished(Loader<ArrayList<ExerciseEntry>> loader, ArrayList<ExerciseEntry> data) {
         exerciseEntries.clear();
@@ -135,6 +144,9 @@ public class HistoryFragment extends Fragment implements LoaderManager.LoaderCal
 
     }
 
+    /**
+     * sets the operation in the background to fetch everything.
+     */
     public static class DataLoader extends AsyncTaskLoader<ArrayList<ExerciseEntry>>{
 
         public DataLoader(Context context){
@@ -155,13 +167,14 @@ public class HistoryFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
-
+    /**
+     * create the registration for GCM, code taken from demo as inspiration
+     */
     class GcmRegistrationAsyncTask extends AsyncTask<Void, Void, String> {
         private Registration regService = null;
         private GoogleCloudMessaging gcm;
         private Context context;
 
-        // TODO: change to your own sender ID to Google Developers Console project number, as per instructions above
         private static final String SENDER_ID = "374255966973";
 
         public GcmRegistrationAsyncTask(Context context) {

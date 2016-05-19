@@ -17,7 +17,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
+/**
+ * SyncServlet will power the home page and the sync operation. For a simple get request
+ * we shall display all the exercises
+ */
 public class SyncServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -31,10 +34,19 @@ public class SyncServlet extends HttpServlet {
                 req, resp);
     }
 
+    /**
+     * Post operation will take in a JSON string in the json key parameter
+     * @param req
+     * @param resp
+     * @throws IOException
+     * @throws ServletException
+     */
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException, ServletException {
         String json = req.getParameter("json");
         JSONArray jsonArray;
+
+        // here we see if the json if null or an empty string
         if (json == null || json.equals("")) {
             req.setAttribute("_retStr", "invalid input");
             getServletContext().getRequestDispatcher("/query_result.jsp")
@@ -42,7 +54,7 @@ public class SyncServlet extends HttpServlet {
             return;
         }else{
             try {
-
+                // try to convert the json string into an actual json object
                 jsonArray = new JSONArray(json);
             } catch (org.json.JSONException e) {
                 // crash and burn
@@ -72,6 +84,7 @@ public class SyncServlet extends HttpServlet {
             ExerciseEntryDataStore.delete(exercise.mId);
         }
 
+        // set the exercise entries into the result for the jsp to renders
         req.setAttribute("result", ExerciseEntryDataStore.list());
 
         getServletContext().getRequestDispatcher("/query_result.jsp").forward(

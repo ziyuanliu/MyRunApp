@@ -58,6 +58,9 @@ we record our exercises.
 ------
 Peer-coded with Richard Cornew.
 
+information passed to the server is in the format of JSON String -- the server will decode the json
+string
+
 DEMO provided by GCMDemo is taken into inspiration. We use query.do and refactored it into sync.do
 to fullfil or post and get method requests.
 
@@ -65,4 +68,6 @@ For deletion, we also use the same mechanisms: however, we included GCM to regis
 Upon deletion message, the app will delete the ID passed back via GCM
 
 For GCM receive, we check if the fragment is visible or not. If visible, we reload the LoadManager again
-to reload the database into history fragment everytime. That we can get the latest entries.
+to reload the database into history fragment every time. That we can get the latest entries.
+
+Major changes on the app site is on HistoryFragment.java

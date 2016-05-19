@@ -39,8 +39,13 @@ public class ExerciseEntryDataStore {
         mDatastore.put(entity);
     }
 
+    /**
+     * adds the entry to the datastore
+     * @param exercise
+     * @return
+     */
     public static boolean add(ExerciseEntry exercise) {
-        if (getContactByName(exercise.mId, null) != null) {
+        if (getContactById(exercise.mId, null) != null) {
             mLogger.log(Level.INFO, "contact exists");
             return false;
         }
@@ -67,7 +72,11 @@ public class ExerciseEntryDataStore {
         return true;
     }
 
-
+    /**
+     * delete from the entry from id
+     * @param id
+     * @return
+     */
     public static boolean delete(String id) {
         // you can also use name to get key, then use the key to delete the
         // entity from datastore directly
@@ -93,6 +102,10 @@ public class ExerciseEntryDataStore {
         return ret;
     }
 
+    /**
+     * this returns the lists of exercises
+     * @return
+     */
     public static ArrayList<ExerciseEntry> list() {
         ArrayList<ExerciseEntry> resultList = new ArrayList<ExerciseEntry>();
         Query query = new Query(ExerciseEntry.EXERCISE_ENTITY_NAME);
@@ -104,28 +117,39 @@ public class ExerciseEntryDataStore {
         PreparedQuery pq = mDatastore.prepare(query);
 
         for (Entity entity : pq.asIterable()) {
-            ExerciseEntry contact = getExercistEntryFromEntity(entity);
+            ExerciseEntry contact = getExerciseEntryFromEntity(entity);
             if (contact != null) {
                 resultList.add(contact);
             }
         }
-        System.out.println(" RESULTS + "+String.valueOf(resultList.size()));
+
         return resultList;
     }
 
-    public static ExerciseEntry getContactByName(String name, Transaction txn) {
+    /**
+     * fetch the contact by the id of the entry
+     * @param id
+     * @param txn
+     * @return
+     */
+    public static ExerciseEntry getContactById(String id, Transaction txn) {
         Entity result = null;
         try {
             result = mDatastore.get(KeyFactory.createKey(getKey(),
-                    ExerciseEntry.EXERCISE_ENTITY_NAME, name));
+                    ExerciseEntry.EXERCISE_ENTITY_NAME, id));
         } catch (Exception ex) {
 
         }
 
-        return getExercistEntryFromEntity(result);
+        return getExerciseEntryFromEntity(result);
     }
 
-    private static ExerciseEntry getExercistEntryFromEntity(Entity entity) {
+    /**
+     * get the entity, and remake the Exercise Entry
+     * @param entity
+     * @return
+     */
+    private static ExerciseEntry getExerciseEntryFromEntity(Entity entity) {
         if (entity == null) {
             return null;
         }

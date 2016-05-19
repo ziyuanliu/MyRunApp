@@ -13,6 +13,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * Delete Servlet is the the servlet used to serve the deletion operation
+ * We delete it from the ExerciseEntryDataStore and we send via SendMessage to the
+ * GCM services
+ */
 public class DeleteServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;

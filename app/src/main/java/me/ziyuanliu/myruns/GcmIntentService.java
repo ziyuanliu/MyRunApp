@@ -44,16 +44,6 @@ public class GcmIntentService extends IntentService {
                 datasource.open();
                 datasource.deleteExerciseEntry(rowId);
                 showToast(extras.getString("message")+" deleted");
-
-                Intent in = new Intent("refresh.intent");
-
-                //put whatever data you want to send, if any
-                in.putExtra("refresh.intent", "");
-                in.setClass(this, HistoryFragment.class);
-                datasource.close();
-
-                //send broadcast
-                sendBroadcast(intent);
             }
         }
         GcmBroadcastReceiver.completeWakefulIntent(intent);
